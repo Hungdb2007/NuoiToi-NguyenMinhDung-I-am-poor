@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuôi Tôi - Nguyễn Minh Dũng</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .nav-item {
+            cursor: pointer; padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; transition: all 0.3s ease; white-space: nowrap;
+        }
+        .nav-item.active { background-color: #38bdf8; color: #0f172a; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        .nav-item:hover:not(.active) { background-color: rgba(255, 255, 255, 0.1); }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Effects */
+        .snowflake, .money-bill { position: fixed; top: -20px; z-index: 0; user-select: none; pointer-events: none; }
+        .snowflake { color: rgba(255, 255, 255, 0.2); animation: snowfall linear infinite; }
+        .money-bill { color: #22c55e; font-size: 1.5rem; animation: snowfall linear infinite; z-index: 50; }
+        
+        @keyframes snowfall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+
+        /* Confetti Animation */
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            background-color: #f00;
+            animation: confetti-fall linear forwards;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Animations */
+        .shake-avatar { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .pop-in { animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Scan Animation */
+        @keyframes scan { 
+            0%, 100% { top: 0%; opacity: 0; } 
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            50% { top: 100%; } 
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
+        .shine-effect::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine { 100% { left: 100%; } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const USER = {
+            name: "Nguyễn Minh Dũng",
+            username: "@NguyenMinhDung_official",
+            bio: "Chuyên gia tiêu tiền & Nghệ sĩ sao kê. Nuôi tôi đi, hứa sẽ không làm bạn thất vọng.",
+            avatar: "fb1bac299c5613084a47",
+            cover: "30f4e3b040a6ccf895b7",
+            stats: { balance: "250K", trust: "1000%", speed: "5G" }
+        };
+        const SPENDING_PLAN = [
+            { id: 1, label: "Cờ bạc (Sinh lời)", percent: 50, color: "bg-red-500", desc: "Đầu tư rủi ro cao, lợi nhuận... âm vốn." },
+            { id: 2, label: "Mỳ cay & Trà sữa", percent: 10, color: "bg-pink-500", desc: "Duy trì sự sống và độ ngọt ngào." },
+            { id: 3, label: "Nạp Game", percent: 10, color: "bg-purple-500", desc: "Nuôi dạy đứa con tinh thần Yasuo." },
+            { id: 4, label: "Giải trí", percent: 10, color: "bg-yellow-500", desc: "Netflix, Youtube Premium để mở mang tầm mắt." },
+            { id: 5, label: "Học tập", percent: 10, color: "bg-blue-500", desc: "Mua sách về kê màn hình cho cao." },
+            { id: 6, label: "Quỹ dự phòng", percent: 5, color: "bg-green-500", desc: "Để dành cưới vợ (nếu có ai lấy)." },
+        ];
+        const PACKAGES = [
+            { id: 'custom', name: 'Tùy Tâm', price: 'Tự Nhập', color: 'from-emerald-500 to-green-700', icon: 'fa-hand-holding-dollar', desc: 'Ít nhiều không quan trọng, quan trọng là tấm lòng.', shine: true },
+            { id: 'passerby', name: 'Khách Qua Đường', price: '50.000đ', color: 'from-gray-500 to-gray-700', icon: 'fa-walking', desc: 'Rơi rớt thôi, đừng tưởng bở.', shine: false },
+            { id: 'noodle', name: 'Mì Tôm Cứu Đói', price: '200.000đ/tháng', color: 'from-orange-500 to-red-600', icon: 'fa-bowl-food', desc: 'Cứu vật vật trả ơn, cứu Nguyễn Minh Dũng trả oán.', shine: false },
+            { id: 'noob', name: 'NOOB Khởi Nghiệp', price: '500.000đ', color: 'from-slate-500 to-slate-700', icon: 'fa-baby', desc: 'Ủng hộ khởi nghiệp (bằng niềm tin).', shine: false },
+            { id: 'coffee', name: 'Cafe Chém Gió', price: '1.000.000đ', color: 'from-amber-600 to-amber-800', icon: 'fa-mug-hot', desc: 'Tài trợ caffeine để thức đêm cày rank.', shine: false },
+            { id: 'pro', name: 'PRO Vip Pro', price: '5.000.000đ', color: 'from-blue-600 to-indigo-800', icon: 'fa-briefcase', desc: 'Nhà đầu tư thiên thần (nhưng gãy cánh).', shine: false },
+            { id: 'cultivation', name: 'Gói Độ Kiếp', price: '10.000.000đ/tháng', color: 'from-purple-600 to-pink-600', icon: 'fa-bolt', desc: 'Nuôi tôi tu thành chính quả (hoặc top 1 server).', shine: true },
+            { id: 'daddy', name: 'Sugar Daddy', price: '50.000.000đ', color: 'from-yellow-500 to-yellow-700', icon: 'fa-crown', desc: 'Nuôi tôi đi, tôi ngoan lắm (khi ngủ).', shine: true },
+            { id: 'ex', name: 'Người Yêu Cũ', price: '100.000.000đ', color: 'from-rose-500 to-rose-700', icon: 'fa-heart-crack', desc: 'Dằn mặt người cũ: Anh sống tốt hơn em!', shine: true }
+        ];
+        const REASONS = [
+            { icon: "fa-bolt", title: "Sao Kê Realtime", desc: "Cập nhật từng giây! Nhanh hơn cả tốc độ bạn chuyển tiền!" },
+            { icon: "fa-search-dollar", title: "Minh Bạch 1000%", desc: "Báo cáo chi tiết từng đồng (kể cả tiền gửi xe 5k)!" },
+            { icon: "fa-dice", title: "Chi Tiêu Hợp Lý", desc: "Hứa sẽ chi thật mạnh tay vào cờ bạc để sinh lãi trả ơn bạn!" },
+            { icon: "fa-comments", title: "Phản Hồi Siêu Nhanh", desc: "Hỏi ăn gì lúc 3h sáng cũng trả lời (nếu chưa ngủ)." },
+        ];
+        const COMPARISON = [
+            { criteria: "Thời gian sao kê", other: "3 năm (hoặc không bao giờ)", me: "Trước khi tiêu (duyệt mới mua)" },
+            { criteria: "Chất lượng File", other: "Excel mờ như ảnh ma", me: "4K Ultra HD, có chữ ký số" },
+            { criteria: "Độ chính xác", other: "Làm tròn 1+1=3", me: "Chính xác từng đồng lẻ" },
+            { criteria: "Hỗ trợ KH", other: "Block nhanh như chớp", me: "Rep nhanh hơn Chatbot" },
+        ];
+        const NEWS = [
+            "🔥 TIN VỊT: Các nhà khoa học chứng minh donate cho Dũng giúp giảm 99% stress.",
+            "🍜 ẨM THỰC: Dũng đang phân vân giữa Hảo Hảo chua cay hay Lẩu Thái, cần 10k.",
+            "📉 TÀI CHÍNH: Ví của Dũng đang ở trạng thái 'bốc hơi'.",
+            "❤️ TÌNH CẢM: Người yêu cũ của Dũng vừa nhắn tin đòi nợ.",
+            "🛑 CẢNH BÁO: Đừng nhìn vào mắt Dũng quá 5 giây, sẽ bị thôi miên đấy."
+        ];
+        const REVIEWS = [
+            { name: "Người Giấu Tên", text: "Donate xong thấy người nhẹ nhõm hẳn. 10 điểm!", avatar: "😎" },
+            { name: "Chị Gái Mưa", text: "Web đẹp trai như chủ nó vậy (ý là ảo).", avatar: "🥰" },
+            { name: "Anh Trai Nương Tựa", text: "Đã chuyển 20k tiền cafe, nhớ thối lại 5k.", avatar: "🤠" }
+        ];
+        const REALTIME_TRANSACTIONS = [
+            { id: 1, type: 'in', name: 'Nguyễn Thị Nở', amount: 500000, msg: 'Mua thuốc giải cảm cho em nhé', time: 'Vừa xong' },
+            { id: 2, type: 'out', name: 'Mì Hảo Hảo', amount: 10000, msg: 'Ăn sáng (2 gói)', time: '15 phút trước' },
+            { id: 3, type: 'in', name: 'Bùi Hiền', amount: 20000, msg: 'Ly cafe cóc', time: '30 phút trước' },
+            { id: 4, type: 'out', name: 'Gửi xe', amount: 5000, msg: 'Đi học', time: '1 giờ trước' },
+            { id: 5, type: 'in', name: 'Ẩn danh', amount: 100000, msg: 'Đừng nạp game nhé', time: '2 giờ trước' },
+        ];
+        const GACHA_ITEMS = [
+            { text: "Mua Mì Tôm Hảo Hảo", icon: "🍜", color: "text-yellow-400" },
+            { text: "Nạp Skin Yasuo", icon: "⚔️", color: "text-blue-400" },
+            { text: "Đi Massage Bấm Huyệt", icon: "💆", color: "text-pink-400" },
+            { text: "All-in Tài Xỉu", icon: "🎲", color: "text-red-500" },
+            { text: "Mua Sách (Chắc chắn là xạo)", icon: "📚", color: "text-green-400" },
+            { text: "Uống Trà Sữa Full Topping", icon: "🧋", color: "text-orange-400" },
+        ];
+        const CHAT_USERS = [{ name: "Elon Musk", color: "text-blue-400" }, { name: "Bill Gates", color: "text-green-400" }, { name: "Shark Hưng", color: "text-red-400" }, { name: "Sơn Tùng MTP", color: "text-sky-400" }];
+        const CHAT_MESSAGES = ["Vừa donate 1 tỷ, check ib em ơi", "Dự án này tiềm năng đấy, all-in!", "Stk đâu sao tìm mãi không thấy?", "Uy tín quá, 10 điểm!", "Nuôi tôi với, tôi cũng đói :("];
+        const POKE_MESSAGES = ["Đừng sờ hiện vật! 🚫", "Nạp chưa mà sờ? 😠", "Đau em! 😭", "Sờ nữa tính phí nha! 💸", "Yamete kudasai~ 😳"];
+
+        // --- COMPONENTS ---
+
+        const BackgroundEffects = ({ isRainingMoney, showConfetti }) => {
+            const [effects, setEffects] = useState([]);
+            
+            useEffect(() => {
+                setEffects(Array.from({ length: 20 }).map((_, i) => ({
+                    id: `snow-${i}`, type: 'snowflake', content: '❄',
+                    left: Math.random() * 100 + "vw", 
+                    duration: (Math.random() * 10 + 10) + "s", 
+                    delay: Math.random() * 5 + "s", 
+                    size: (Math.random() * 0.5 + 0.5) + "rem"
+                })));
+            }, []);
+
+            useEffect(() => {
+                if (isRainingMoney) {
+                    const bills = Array.from({ length: 40 }).map((_, i) => ({
+                        id: `money-${Date.now()}-${i}`, type: 'money-bill', content: Math.random() > 0.5 ? '💵' : '💰',
+                        left: Math.random() * 100 + "vw", duration: (Math.random() * 2 + 2) + "s", delay: Math.random() * 1 + "s", size: (Math.random() * 1 + 1.5) + "rem"
+                    }));
+                    setEffects(prev => [...prev, ...bills]);
+                    setTimeout(() => setEffects(prev => prev.filter(e => e.type !== 'money-bill')), 5000);
+                }
+            }, [isRainingMoney]);
+
+            useEffect(() => {
+                if (showConfetti) {
+                    const confettis = Array.from({ length: 50 }).map((_, i) => ({
+                        id: `confetti-${Date.now()}-${i}`, type: 'confetti',
+                        left: Math.random() * 100 + "vw", 
+                        bg: ['#f00', '#0f0', '#00f', '#ff0', '#0ff'][Math.floor(Math.random()*5)],
+                        duration: (Math.random() * 2 + 3) + "s"
+                    }));
+                    setEffects(prev => [...prev, ...confettis]);
+                    setTimeout(() => setEffects(prev => prev.filter(e => e.type !== 'confetti')), 5000);
+                }
+            }, [showConfetti]);
+
+            return <div className="fixed inset-0 pointer-events-none z-0">
+                {effects.map(e => (
+                    <div key={e.id} 
+                         className={e.type} 
+                         style={{ 
+                             left: e.left, 
+                             animationDuration: e.duration, 
+                             animationDelay: e.delay, 
+                             fontSize: e.size,
+                             backgroundColor: e.bg 
+                         }}>
+                        {e.content}
+                    </div>
+                ))}
+            </div>;
+        };
+
+        const CertificateModal = ({ onClose }) => (<div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-[fadeIn_0.5s]" onClick={onClose}><div className="bg-[#fffbeb] text-[#451a03] p-8 rounded-lg max-w-lg w-full text-center border-8 border-double border-[#b45309] shadow-2xl relative" onClick={e => e.stopPropagation()}><div className="absolute top-0 left-0 w-full h-full border-2 border-[#b45309] pointer-events-none m-2 box-border"></div><div className="mb-4 text-4xl text-[#b45309]"><i className="fas fa-certificate"></i></div><h2 className="text-3xl font-extrabold uppercase tracking-widest mb-2 font-serif">Chứng Nhận</h2><p className="text-sm uppercase tracking-wider text-[#92400e] mb-6 font-serif">Tấm Lòng Vàng (Trong Làng Nuôi Dũng)</p><p className="text-lg italic mb-2">Chứng nhận Đại Gia / Mạnh Thường Quân:</p><div className="text-2xl font-bold border-b-2 border-dashed border-[#b45309] inline-block px-8 py-1 mb-6">Bạn Tốt Bụng</div><p className="mb-6 leading-relaxed">Đã có hành động nghĩa hiệp cao cả là <strong className="text-[#b45309]">Sao chép số tài khoản</strong> của Nguyễn Minh Dũng. Hành động này đã góp phần thắp sáng niềm tin (và ví tiền) của Dũng.</p><div className="flex justify-around items-end mt-8"><div className="text-center"><div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-red-800 shadow-inner transform -rotate-12"><span className="text-xs uppercase">Con dấu<br/>Uy tín</span></div></div><div className="text-center"><p className="font-signature text-xl mb-1">Dung</p><p className="text-xs uppercase font-bold border-t border-[#451a03] pt-1">Người Thụ Hưởng</p></div></div><button onClick={onClose} className="mt-8 bg-[#b45309] text-white px-6 py-2 rounded hover:bg-[#92400e] transition">Đóng & Khoe Ngay</button></div></div>);
+        
+        // --- SỬA LẠI COMPONENT MUSIC PLAYER ĐỂ PHÁT NHẠC THẬT ---
+        const MusicPlayer = () => { 
+            const [playing, setPlaying] = useState(false); 
+            const audioRef = useRef(null);
+
+            useEffect(() => {
+                if (playing) {
+                    audioRef.current.play().catch(e => console.log("Chưa tương tác nên chưa tự phát được"));
+                } else {
+                    audioRef.current.pause();
+                }
+            }, [playing]);
+
+            return (
+                <div className="fixed bottom-4 left-4 z-40 glass-panel p-3 rounded-full flex items-center gap-3 animate-bounce hover:animate-none cursor-pointer transition" onClick={() => setPlaying(!playing)}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${playing ? 'bg-green-500 text-white animate-spin' : 'bg-slate-700 text-slate-400'}`}>
+                        <i className={`fas ${playing ? 'fa-compact-disc' : 'fa-play'}`}></i>
+                    </div>
+                    <div className="pr-2 hidden md:block">
+                        <p className="text-xs font-bold text-white">Nhạc Xin Tiền 😢</p>
+                    </div>
+                    {/* --- DÁN LINK NHẠC MP3 CỦA BẠN VÀO DÒNG DƯỚI (src="...") --- */}
+                    <audio ref={audioRef} loop src="https://files.catbox.moe/uw7md8.mp3"></audio>
+                </div>
+            ); 
+        };
+        
+        const LiveChat = () => { 
+            const [messages, setMessages] = useState([{ id: 1, user: "System", text: "Chào mừng đến với kênh đầu tư Nguyễn Minh Dũng!", color: "text-slate-400" }]); 
+            useEffect(() => { 
+                const interval = setInterval(() => { 
+                    const user = CHAT_USERS[Math.floor(Math.random() * CHAT_USERS.length)]; 
+                    const text = CHAT_MESSAGES[Math.floor(Math.random() * CHAT_MESSAGES.length)]; 
+                    setMessages(prev => { 
+                        const newArr = [...prev, { id: Date.now(), user: user.name, text: text, color: user.color }]; 
+                        if (newArr.length > 5) newArr.shift(); 
+                        return newArr; 
+                    }); 
+                }, 4000); 
+                return () => clearInterval(interval); 
+            }, []); 
+            return (
+                <div className="glass-panel p-4 rounded-2xl h-fit">
+                    <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Live Chat "Đại Gia"
+                    </h3>
+                    <div className="space-y-3 max-h-[200px] overflow-hidden flex flex-col justify-end">
+                        {messages.map(msg => (
+                            <div key={msg.id} className="text-xs fade-in">
+                                <span className={`font-bold ${msg.color}`}>{msg.user}: </span>
+                                <span className="text-slate-300">{msg.text}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ); 
+        };
+
+        const GachaGame = () => { const [spinning, setSpinning] = useState(false); const [result, setResult] = useState(null); const playGacha = () => { if (spinning) return; setSpinning(true); setResult(null); setTimeout(() => { setResult(GACHA_ITEMS[Math.floor(Math.random() * GACHA_ITEMS.length)]); setSpinning(false); }, 1500); }; return (<div className="glass-panel p-6 rounded-2xl border border-purple-500/30 text-center relative overflow-hidden mb-8"><div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/20 rounded-full blur-xl"></div><h2 className="text-xl font-bold text-purple-400 mb-2">🔮 Gacha Nhân Phẩm</h2><p className="text-xs text-slate-400 mb-4">Tiền donate sẽ đi về đâu? Quay thử xem!</p><div className="min-h-[100px] flex flex-col items-center justify-center mb-4 bg-slate-800/50 rounded-xl border border-purple-500/20">{spinning ? <div className="text-4xl animate-spin">🎲</div> : result ? <div className="fade-in"><div className="text-5xl mb-2">{result.icon}</div><div className={`font-bold text-lg ${result.color}`}>{result.text}</div></div> : <div className="text-5xl opacity-50">❓</div>}</div><button onClick={playGacha} disabled={spinning} className={`w-full py-2 rounded-xl font-bold transition ${spinning ? 'bg-slate-700' : 'bg-purple-600 hover:bg-purple-500 text-white'}`}>{spinning ? "Đang quay..." : "Quay Nhân Phẩm"}</button></div>); };
+        const FeedingGame = () => { const [count, setCount] = useState(0); const [msg, setMsg] = useState(""); const [clickEffect, setClickEffect] = useState([]); const feed = (e) => { setCount(prev => prev + 1); const rect = e.target.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; const newEffect = { id: Date.now(), x, y, text: "+1 🍗" }; setClickEffect(prev => [...prev, newEffect]); setTimeout(() => setClickEffect(prev => prev.filter(ef => ef.id !== newEffect.id)), 1000); if ((count + 1) % 10 === 0) setMsg("Ngon quá! 😋"); if ((count + 1) % 50 === 0) setMsg("No căng bụng rồi! 😵"); if ((count + 1) % 100 === 0) setMsg("Thánh ăn là đây! 🏆"); setTimeout(() => setMsg(""), 2000); }; return (<div className="glass-panel p-6 rounded-2xl border border-orange-500/30 text-center relative overflow-hidden"><h2 className="text-xl font-bold text-orange-400 mb-2">🍗 Cho Dũng Ăn</h2><p className="text-xs text-slate-400 mb-4">Bấm liên tục để vỗ béo Dev!</p><div className="relative h-40 flex items-center justify-center mb-4 bg-slate-800/50 rounded-xl cursor-pointer select-none" onClick={feed}><div className="text-6xl active:scale-90 transition transform hover:scale-110">🤤</div>{msg && <div className="absolute top-2 bg-white text-black text-xs font-bold px-2 py-1 rounded-lg animate-bounce">{msg}</div>}{clickEffect.map(ef => <div key={ef.id} className="absolute text-orange-400 font-bold pointer-events-none pop-in" style={{ left: ef.x, top: ef.y }}>{ef.text}</div>)}</div><div className="text-3xl font-bold text-white mb-2">{count}</div><p className="text-xs text-slate-500">lần đã cho ăn</p></div>); };
+        const FortuneGame = () => { const [name, setName] = useState(""); const [fortune, setFortune] = useState(null); const [loading, setLoading] = useState(false); const fortunes = [ { text: "Hôm nay tài lộc dồi dào, nhưng nếu không chia sẻ 50k cho Dũng thì cẩn thận rơi ví!", color: "text-red-400" }, { text: "Quẻ này cực tốt! Người yêu cũ sẽ quay lại... đòi nợ nếu bạn không donate gói 'Mì Tôm'.", color: "text-yellow-400" }, { text: "Vận đào hoa đang tới. Donate 100k để mở khóa tính năng 'Có người yêu'.", color: "text-pink-400" }, { text: "Thần tài gõ cửa, nhưng thấy bạn chưa donate cho Hưng nên ông ấy lại đi.", color: "text-slate-400" }, { text: "Sắp tới công việc thăng tiến. Hãy donate để tích đức cho server chạy mượt.", color: "text-green-400" }, { text: "Hôm nay ra đường coi chừng... vấp cục đá. Donate 20k để giải hạn ngay!", color: "text-orange-400" } ]; const tellFortune = () => { if (!name.trim()) return alert("Nhập tên đã rồi thầy mới bói được!"); setLoading(true); setFortune(null); setTimeout(() => { const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)]; setFortune(randomFortune); setLoading(false); }, 1500); }; return (<div className="glass-panel p-6 rounded-2xl border border-teal-500/30 text-center relative overflow-hidden"><h2 className="text-xl font-bold text-teal-400 mb-2">🔮 Thầy Bói Online</h2><p className="text-xs text-slate-400 mb-4">Xem vận mệnh hôm nay thế nào</p><div className="flex gap-2 mb-4"><input type="text" placeholder="Nhập tên của bạn..." className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500" value={name} onChange={(e) => setName(e.target.value)} /><button onClick={tellFortune} disabled={loading} className="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition disabled:opacity-50">{loading ? "..." : "Xem"}</button></div><div className="min-h-[80px] flex items-center justify-center bg-slate-800/50 rounded-xl p-4 border border-teal-500/20">{loading ? <div className="text-teal-400 animate-pulse">Đang nhìn thấu tương lai... 👁️</div> : fortune ? <p className={`text-sm font-medium ${fortune.color} fade-in`}>"{fortune.text}"</p> : <p className="text-xs text-slate-500">Nhập tên để nhận lời phán truyền</p>}</div></div>); };
+        const ProgressBar = ({ label, percent, color, desc }) => ( <div className="mb-6"><div className="flex justify-between text-sm mb-1"><span className="font-medium text-slate-300">{label}</span><span className="font-bold text-white">{percent}%</span></div><div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden mb-1"><div className={`h-3 rounded-full ${color} transition-all duration-1000`} style={{ width: `${percent}%` }}></div></div><p className="text-xs text-slate-500 italic">{desc}</p></div> );
+        const TrustScanner = () => { const [scanning, setScanning] = useState(true); const [status, setStatus] = useState("Đang quét..."); useEffect(() => { const interval = setInterval(() => { setScanning(true); setStatus("Đang kiểm tra lương tâm..."); setTimeout(() => { setScanning(false); setStatus("✅ UY TÍN 1000%"); }, 2000); }, 4000); return () => clearInterval(interval); }, []); return (<div className="glass-panel p-6 rounded-2xl border border-cyan-500/30 text-center relative overflow-hidden h-full flex flex-col justify-center"><h3 className="text-cyan-400 font-bold mb-4 uppercase tracking-widest text-xs">Hệ Thống Kiểm Định AI</h3><div className="relative w-32 h-32 mx-auto mb-4 border-2 border-cyan-500/50 rounded-full flex items-center justify-center bg-slate-900/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]"><i className={`fas fa-fingerprint text-6xl transition-all duration-500 ${scanning ? 'text-slate-600 scale-90' : 'text-cyan-400 scale-100'}`}></i><div className="absolute top-0 left-0 w-full h-1 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)] animate-[scan_2s_linear_infinite]"></div></div><div className={`text-xl font-bold transition-all duration-300 ${scanning ? 'text-slate-400 animate-pulse' : 'text-green-400 scale-110'}`}>{status}</div><p className="text-[10px] text-slate-500 mt-2">Được chứng nhận bởi... chính tôi.</p></div>); };
+
+        const ModalDonate = ({ onClose, selectedPackage, triggerRain, showCertificate }) => {
+            const [customAmount, setCustomAmount] = useState('');
+            
+            // Kích hoạt mưa tiền khi mở modal
+            useEffect(() => { triggerRain(true); }, []);
+            
+            // Hàm đóng modal và reset trạng thái mưa
+            const handleClose = () => {
+                triggerRain(false);
+                onClose();
+            };
+            
+            const handleCopy = (text) => {
+                const tempInput = document.createElement("input");
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                
+                handleClose(); // Đóng modal
+                showCertificate(); // Hiện bằng khen
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={handleClose}>
+                    <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-sm w-full p-6 relative shadow-2xl fade-in" onClick={e => e.stopPropagation()}>
+                        <button onClick={handleClose} className="absolute top-4 right-4 text-slate-400 hover:text-white"><i className="fas fa-times text-xl"></i></button>
+                        <div className="text-center">
+                            <h3 className="text-2xl font-bold text-white mb-2">Donate Cho Dũng</h3>
+                            {selectedPackage ? <div className={`mb-4 inline-block px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r text-white ${selectedPackage.color}`}>Gói {selectedPackage.name}</div> : null}
+                            {selectedPackage?.id === 'custom' ? (
+                                <div className="mb-4">
+                                    <label className="block text-slate-400 text-xs mb-1">Nhập số tiền muốn donate:</label>
+                                    <input type="number" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500 font-bold text-center" placeholder="Ví dụ: 686868" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} autoFocus />
+                                </div>
+                            ) : (
+                                selectedPackage && <div className="text-2xl sm:text-3xl font-bold text-white mb-4">{selectedPackage.price}</div>
+                            )}
+                            <div className="bg-white p-4 rounded-xl mb-4 inline-block">
+                                <div className="w-48 h-48 bg-slate-100 flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-300 relative overflow-hidden">
+                                    {/* THAY ẢNH QR CỦA BẠN VÀO DÒNG DƯỚI (src="link_anh_qr") */}
+                                    <img src="31cbc50bb700385e6111.jpg" alt="QR Code" className="w-full h-full object-contain" />
+                                    {/* <i className="fas fa-qrcode text-5xl"></i> */}
+                                    {(selectedPackage?.id === 'daddy' || selectedPackage?.id === 'custom') && <div className="absolute inset-0 flex items-center justify-center text-yellow-500/20 text-6xl animate-pulse pointer-events-none"><i className="fas fa-crown"></i></div>}
+                                </div>
+                            </div>
+                            <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex justify-between items-center mb-2"><span className="text-slate-400 text-sm">Vietcombank</span><span className="font-mono font-bold text-sky-400">106149788</span></div>
+                            <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex justify-between items-center mb-4"><span className="text-slate-400 text-sm">Nội dung</span><span className="font-mono font-bold text-sky-400 truncate max-w-[150px]">{selectedPackage?.id === 'custom' ? `Dung ${customAmount || 'DONATE'}` : selectedPackage ? `Dung ${selectedPackage.name}` : "DONATE Dung"}</span></div>
+                            <button onClick={() => handleCopy("999988886666")} className="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold rounded-xl hover:shadow-lg transition">Sao Chép STK</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- SUB-PAGES ---
+        const HomeView = () => {
+            const [currentReview, setCurrentReview] = useState(0);
+            useEffect(() => { const interval = setInterval(() => { setCurrentReview((prev) => (prev + 1) % REVIEWS.length); }, 4000); return () => clearInterval(interval); }, []);
+            return (
+                <div className="fade-in space-y-8">
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2 overflow-hidden flex items-center">
+                        <div className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded mr-3 shrink-0">TIN VỊT</div>
+                        <div className="whitespace-nowrap overflow-hidden w-full"><div className="animate-[marquee_60s_linear_infinite] inline-block text-sm text-yellow-200">{NEWS.join(" ••• ")}</div></div>
+                    </div>
+                    <div className="text-center py-12 bg-slate-800/30 rounded-3xl border border-slate-700/50 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-500 via-purple-500 to-pink-500"></div>
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Chào mừng Đại Gia đến với <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Động Của Dũng</span></h2>
+                        <p className="text-slate-400 mb-8 max-w-xl mx-auto px-4">Nơi tài chính của bạn bay hơi nhưng niềm vui ở lại. Donate không phải là mất tiền, mà là chuyển tiền sang một nơi vui hơn (là túi tôi).</p>
+                        <div className="max-w-md mx-auto bg-slate-900/50 p-6 rounded-2xl border border-slate-700 mb-8 mx-4">
+                            <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-red-400 uppercase tracking-wider"><i className="fas fa-crosshairs"></i> Nhiệm vụ cấp bách</span><span className="text-xs text-slate-400">Còn thiếu 15k</span></div>
+                            <h3 className="text-lg font-bold text-white mb-3 text-left">Giải cứu cơn đói: Bánh Mì Thịt</h3>
+                            <div className="w-full bg-slate-800 rounded-full h-4 overflow-hidden mb-2"><div className="bg-red-500 h-4 rounded-full w-[60%] animate-pulse"></div></div>
+                            <div className="flex justify-between text-xs text-slate-500"><span>Đã có: 20.000đ</span><span>Mục tiêu: 35.000đ</span></div>
+                        </div>
+                        <div className="inline-block bg-slate-900/50 px-6 py-3 rounded-xl border border-slate-700 shadow-lg transform hover:-translate-y-1 transition duration-300"><i className="fas fa-quote-left text-slate-500 mr-2"></i><span className="text-slate-300 italic">"Hãy donate khi bạn vui, hoặc khi bạn lỡ tay."</span></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {REVIEWS.map((review, idx) => (
+                            <div key={idx} className="glass-panel p-4 rounded-xl flex items-start gap-3 hover:bg-white/5 transition duration-300">
+                                <div className="text-3xl bg-slate-800 rounded-full w-10 h-10 flex items-center justify-center shadow-inner">{review.avatar}</div>
+                                <div><h4 className="text-sm font-bold text-white">{review.name}</h4><p className="text-xs text-slate-400 mt-1 leading-relaxed">"{review.text}"</p></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const GameView = () => (
+            <div className="fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="md:col-span-2 lg:col-span-3 text-center mb-2"><h2 className="text-2xl font-bold text-white gradient-text inline-block">🎮 Khu Vui Chơi Có Thưởng</h2><p className="text-slate-400 text-sm">(Thưởng là niềm vui tinh thần, phạt là tiền trong ví)</p></div>
+                <GachaGame />
+                <FortuneGame />
+                <FeedingGame />
+            </div>
+        );
+
+        const PackagesView = ({ onDonate }) => (
+            <div className="fade-in">
+                <div className="text-center mb-8"><h2 className="text-2xl font-bold text-white mb-2 gradient-text inline-block">👑 Các Gói Bảo Trợ</h2><p className="text-slate-400 text-sm">Chọn cấp độ "đại gia" của bạn - Tiền nào của nấy (hoặc không)</p></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {PACKAGES.map(pkg => (
+                        <div key={pkg.id} onClick={() => onDonate(pkg)} className={`relative overflow-hidden rounded-2xl p-6 cursor-pointer transform transition hover:scale-105 hover:shadow-2xl border border-white/10 group bg-slate-800 ${pkg.shine ? 'shine-effect ring-2 ring-yellow-500/50' : ''}`}>
+                            <div className={`absolute inset-0 bg-gradient-to-br ${pkg.color} opacity-10 group-hover:opacity-20 transition`}></div>
+                            <div className="relative z-10 text-center flex flex-col h-full justify-between">
+                                <div>
+                                    <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-br ${pkg.color} flex items-center justify-center text-white text-3xl mb-4 shadow-lg group-hover:scale-110 transition`}><i className={`fas ${pkg.icon}`}></i></div>
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-2 leading-tight">{pkg.name}</h3>
+                                    <p className="text-lg sm:text-xl font-bold text-white mb-3 whitespace-nowrap overflow-hidden text-ellipsis">{pkg.price}</p>
+                                </div>
+                                <p className="text-xs text-slate-400 font-medium group-hover:text-slate-200 transition italic">"{pkg.desc}"</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const SpendingView = () => {
+            const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('vi-VN'));
+            useEffect(() => { const timer = setInterval(() => { setCurrentTime(new Date().toLocaleTimeString('vi-VN')); }, 1000); return () => clearInterval(timer); }, []);
+            return (
+                <div className="fade-in space-y-8">
+                    <div className="glass-panel p-8 rounded-3xl">
+                        <div className="text-center mb-8"><h2 className="text-2xl font-bold text-white mb-2"><i className="fas fa-chart-pie text-sky-500 mr-2"></i> Báo Cáo Tài Chính</h2><p className="text-slate-400">Chi tiết kế hoạch "giải ngân" vốn đầu tư.</p></div>
+                        <div className="grid grid-cols-1 gap-6">{SPENDING_PLAN.map(item => <ProgressBar key={item.id} {...item} />)}</div>
+                    </div>
+                    <div className="glass-panel p-6 rounded-3xl border border-green-500/20">
+                        <div className="flex justify-between items-center mb-6">
+                            <div><h2 className="text-xl font-bold text-white flex items-center gap-2"><i className="fas fa-file-invoice-dollar text-green-400"></i> Sao Kê Real-time</h2><p className="text-xs text-slate-400 mt-1">Cập nhật tự động (bằng cơm)</p></div>
+                            <div className="text-right"><div className="text-xs font-bold text-red-500 animate-pulse mb-1">● LIVE</div><div className="text-sm font-mono text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-600">{currentTime}</div></div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-slate-500 uppercase bg-slate-800/50"><tr><th className="px-4 py-3 rounded-l-lg">Thời gian</th><th className="px-4 py-3">Nội dung / Người gửi</th><th className="px-4 py-3 text-right rounded-r-lg">Số tiền</th></tr></thead>
+                                <tbody className="divide-y divide-slate-700/50">
+                                    {REALTIME_TRANSACTIONS.map((t) => (
+                                        <tr key={t.id} className="hover:bg-slate-700/20 transition">
+                                            <td className="px-4 py-3 text-slate-400 whitespace-nowrap font-mono">{t.time}</td>
+                                            <td className="px-4 py-3"><div className="font-bold text-slate-200">{t.name}</div><div className="text-xs text-slate-500 italic truncate max-w-[200px]">{t.msg}</div></td>
+                                            <td className={`px-4 py-3 text-right font-bold ${t.type === 'in' ? 'text-green-400' : 'text-red-400'}`}>{t.type === 'in' ? '+' : '-'}{t.amount.toLocaleString()}đ</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="mt-4 text-center"><button className="text-xs text-sky-400 hover:text-sky-300 hover:underline transition">Xem lịch sử đầy đủ <i className="fas fa-external-link-alt ml-1"></i></button></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ReasonsView = () => (
+            <div className="fade-in space-y-8">
+                <div>
+                    <h2 className="text-2xl font-bold text-white mb-6 gradient-text inline-block">🎯 4 Lý Do Thuyết Phục</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {REASONS.map((r, i) => (
+                            <div key={i} className="glass-panel p-6 rounded-2xl hover:bg-slate-800/80 transition duration-300">
+                                <div className="w-12 h-12 rounded-xl bg-slate-700/50 flex items-center justify-center text-sky-400 text-2xl mb-4 border border-slate-600"><i className={`fas ${r.icon}`}></i></div>
+                                <h3 className="text-lg font-bold text-white mb-2">{r.title}</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">{r.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div>
+                    <h2 className="text-2xl font-bold text-white mb-6 gradient-text inline-block">💰 So Sánh Với "Người Khác"</h2>
+                    <div className="glass-panel rounded-2xl overflow-hidden">
+                        <div className="grid grid-cols-3 bg-slate-800/50 p-4 font-bold text-sm text-slate-300 border-b border-slate-700"><div>Tiêu chí</div><div className="text-red-400"><i className="fas fa-times-circle mr-1"></i> Người khác</div><div className="text-green-400"><i className="fas fa-check-circle mr-1"></i> Nuôi Tôi</div></div>
+                        {COMPARISON.map((row, i) => (
+                            <div key={i} className="grid grid-cols-3 p-4 text-sm border-b border-slate-700/50 hover:bg-slate-700/20 transition">
+                                <div className="font-medium text-slate-400">{row.criteria}</div><div className="text-slate-500">{row.other}</div><div className="font-bold text-sky-400">{row.me}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const CommitmentView = () => (
+            <div className="fade-in space-y-8">
+                <div className="text-center"><h2 className="text-3xl font-extrabold text-white mb-2">Lời Hứa Vàng 🌟</h2><p className="text-slate-400">Những điều tâm huyết nhất của một con nợ uy tín.</p></div>
+                <div className="glass-panel p-8 rounded-3xl border-2 border-yellow-500/20 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                        <div className="bg-slate-800/50 p-4 rounded-xl flex items-start border border-white/5 hover:border-yellow-500/50 transition duration-300"><div className="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mr-4 shrink-0 font-bold text-lg">1</div><div><strong className="text-white block mb-1">Sao Kê Siêu Tốc</strong><span className="text-slate-400 text-sm">Cập nhật nhanh hơn tốc độ người yêu cũ trở mặt. 9h sáng mỗi ngày!</span></div></div>
+                        <div className="bg-slate-800/50 p-4 rounded-xl flex items-start border border-white/5 hover:border-yellow-500/50 transition duration-300"><div className="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mr-4 shrink-0 font-bold text-lg">2</div><div><strong className="text-white block mb-1">Minh Bạch Tuyệt Đối</strong><span className="text-slate-400 text-sm">Soi kỹ từng đồng. 5k gửi xe cũng có hóa đơn (nếu chú bảo vệ chịu viết).</span></div></div>
+                        <div className="bg-slate-800/50 p-4 rounded-xl flex items-start border border-white/5 hover:border-yellow-500/50 transition duration-300"><div className="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mr-4 shrink-0 font-bold text-lg">3</div><div><strong className="text-white block mb-1">Unboxing Công Khai</strong><span className="text-slate-400 text-sm">Livestream mở quà/mì tôm cho các mạnh thường quân kiểm tra.</span></div></div>
+                        <div className="bg-slate-800/50 p-4 rounded-xl flex items-start border border-white/5 hover:border-yellow-500/50 transition duration-300"><div className="w-10 h-10 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center mr-4 shrink-0 font-bold text-lg">4</div><div><strong className="text-white block mb-1">Không Bùng Kèo</strong><span className="text-slate-400 text-sm">Hỏi khó đến mấy cũng trả lời (trừ khi đang ngủ hoặc giả vờ ngủ).</span></div></div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <TrustScanner />
+                    <div className="glass-panel p-6 rounded-2xl border border-pink-500/20 flex flex-col justify-center text-center relative">
+                        <div className="absolute top-2 right-2 text-6xl opacity-10 rotate-12">📜</div>
+                        <h3 className="text-lg font-bold text-white mb-2">Hợp Đồng Tình Nghĩa</h3>
+                        <div className="bg-slate-900/50 p-4 rounded-lg text-xs text-slate-400 text-left font-mono leading-relaxed mb-4 border border-dashed border-slate-600">
+                            <p className="mb-2"><strong>ĐIỀU 1:</strong> Bằng việc bấm nút Donate, bạn thừa nhận Dũng đẹp trai và xứng đáng được nuôi.</p>
+                            <p className="mb-2"><strong>ĐIỀU 2:</strong> Số tiền đã donate sẽ không hoàn lại (trừ khi Dũng trúng Vietlott).</p>
+                            <p><strong>ĐIỀU 3:</strong> Bên nhận (DŨng) hứa sẽ dùng tiền để duy trì sự sống và phục vụ cộng đồng (bằng cách chơi game).</p>
+                        </div>
+                        <div className="w-full py-2 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 font-mono text-xs border border-slate-700"><i className="fas fa-signature mr-2"></i> [ Đã ký bởi hàng nghìn đại gia ]</div>
+                    </div>
+                </div>
+                <div className="text-center pt-4 pb-8">
+                    <p className="text-slate-300 italic max-w-2xl mx-auto">"Tôi nghèo thực lực, đói có quy trình. Mỗi đồng bạn gửi là một viên gạch xây dựng ước mơ (mua skin Yasuo) của tôi! 😭"</p>
+                    <div className="mt-4 inline-block bg-red-500/10 text-red-400 px-4 py-1 rounded-full text-xs font-bold border border-red-500/20">P/S: Hứa không mua ô tô. Vì chưa có bằng lái! 🚗❌</div>
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP ---
+        const App = () => {
+            const [view, setView] = useState('home'); 
+            const [showModal, setShowModal] = useState(false);
+            const [selectedPackage, setSelectedPackage] = useState(null);
+            const [rainMoney, setRainMoney] = useState(false);
+            const [shakeAvatar, setShakeAvatar] = useState(false);
+            const [pokeMsg, setPokeMsg] = useState(null);
+            const [showCertificate, setShowCertificate] = useState(false);
+            const [showConfetti, setShowConfetti] = useState(false);
+
+            const handleDonate = (pkg = null) => { setSelectedPackage(pkg); setShowModal(true); }
+            const handlePoke = () => {
+                setShakeAvatar(true); setPokeMsg(POKE_MESSAGES[Math.floor(Math.random() * POKE_MESSAGES.length)]);
+                setTimeout(() => setShakeAvatar(false), 500); setTimeout(() => setPokeMsg(null), 2000);
+            };
+
+            const triggerCertificate = () => {
+                setShowCertificate(true);
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 5000);
+            };
+
+            const renderView = () => {
+                switch(view) {
+                    case 'game': return <GameView />;
+                    case 'packages': return <PackagesView onDonate={handleDonate} />;
+                    case 'spending': return <SpendingView />;
+                    case 'reasons': return <ReasonsView />;
+                    case 'commitment': return <CommitmentView />;
+                    default: return <HomeView />;
+                }
+            };
+
+            return (
+                <div className="min-h-screen relative overflow-x-hidden selection:bg-sky-500 selection:text-white pb-12">
+                    <BackgroundEffects isRainingMoney={rainMoney} showConfetti={showConfetti} />
+                    <MusicPlayer />
+                    
+                    <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+                    <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+
+                    <div className="relative z-10 max-w-6xl mx-auto p-4 md:p-8">
+                        {/* Header & Nav */}
+                        <div className="flex flex-col xl:flex-row justify-between items-center mb-8 gap-6">
+                            <div className="text-3xl font-extrabold tracking-tight cursor-pointer" onClick={() => setView('home')}>
+                                <span className="text-white">NuôiTôi</span><span className="text-sky-500">.vn</span>
+                            </div>
+                            
+                            {/* Navigation Menu */}
+                            <div className="flex overflow-x-auto gap-2 bg-slate-800/50 p-1 rounded-full backdrop-blur-md border border-slate-700/50 max-w-full no-scrollbar">
+                                {[
+                                    { id: 'home', label: 'Trang Chủ' },
+                                    { id: 'game', label: '🎮 Mini Game' },
+                                    { id: 'packages', label: '👑 Gói Donate' },
+                                    { id: 'spending', label: 'Sử Dụng Quỹ' },
+                                    { id: 'reasons', label: 'Lý Do' },
+                                    { id: 'commitment', label: 'Lời Hứa' }
+                                ].map(item => (
+                                    <div 
+                                        key={item.id}
+                                        onClick={() => setView(item.id)}
+                                        className={`nav-item ${view === item.id ? 'active' : 'text-slate-400'}`}
+                                    >
+                                        {item.label}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button onClick={() => handleDonate(null)} className="hidden xl:block px-6 py-2 bg-white text-slate-900 font-bold rounded-full hover:bg-sky-50 transition shadow-[0_0_20px_rgba(255,255,255,0.3)] animate-bounce">
+                                Donate <i className="fas fa-bolt ml-1 text-yellow-500"></i>
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            {/* LEFT: STATIC PROFILE */}
+                            <div className="lg:col-span-4 lg:sticky lg:top-8 h-fit space-y-6">
+                                <div className="glass-panel rounded-3xl overflow-hidden p-0 relative group">
+                                    <div className="h-32 w-full relative">
+                                        <img src="5782efdd9dd612884bc7.jpg" className="w-full h-full object-cover opacity-80" alt="Cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/90"></div>
+                                    </div>
+                                    <div className="px-6 pb-8 relative -mt-12 text-center">
+                                        <div className="relative inline-block cursor-pointer" onClick={handlePoke}>
+                                            <div className={`w-28 h-28 mx-auto rounded-full border-4 border-slate-800 shadow-xl overflow-hidden bg-slate-800 transition transform active:scale-95 ${shakeAvatar ? 'shake-avatar' : ''}`}>
+                                                <img src="5782efdd9dd612884bc7.jpg" className="w-full h-full" alt="Avatar" />
+                                            </div>
+                                            {pokeMsg && <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-40 bg-white text-slate-900 text-xs font-bold p-2 rounded-lg shadow-lg animate-[zoomIn_0.2s] z-50">{pokeMsg}<div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45"></div></div>}
+                                        </div>
+                                        <h1 className="text-2xl font-bold mt-4 text-white">{USER.name} <i className="fas fa-check-circle text-sky-500 text-lg"></i></h1>
+                                        <p className="text-slate-400 text-sm font-medium mb-4">{USER.username}</p>
+                                        <div className="grid grid-cols-3 gap-2 py-4 border-t border-slate-700/50">
+                                            <div><div className="text-sky-400 font-bold">{USER.stats.balance}</div><div className="text-[10px] text-slate-500 uppercase font-bold">Số dư</div></div>
+                                            <div><div className="text-green-400 font-bold">{USER.stats.trust}</div><div className="text-[10px] text-slate-500 uppercase font-bold">Uy tín</div></div>
+                                            <div><div className="text-purple-400 font-bold">{USER.stats.speed}</div><div className="text-[10px] text-slate-500 uppercase font-bold">Tốc độ</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <LiveChat />
+                            </div>
+
+                            {/* RIGHT: DYNAMIC CONTENT */}
+                            <div className="lg:col-span-8">
+                                {renderView()}
+                            </div>
+                        </div>
+
+                        <footer className="mt-16 text-center text-slate-500 text-sm py-8 border-t border-slate-800"><p>© 2025 Nuôi Tôi - Nguyễn Minh Dũng. All rights reserved (hoặc không).</p></footer>
+                    </div>
+                    {showModal && <ModalDonate onClose={() => setShowModal(false)} selectedPackage={selectedPackage} triggerRain={setRainMoney} showCertificate={triggerCertificate} />}
+                    {showCertificate && <CertificateModal onClose={() => setShowCertificate(false)} />}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
